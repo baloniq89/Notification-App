@@ -1,36 +1,30 @@
 import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg2.extras
 
 class Database:
     def __init__(self):
-        self.connection = self._connect()
-
-    def _connect(self):
-        try:
-            connection = psycopg2.connect(
-                dbname="notification",
-                user="admin",
-                password="admin",
-                host="db",
-                cursor_factory=RealDictCursor
-            )
-            print("Database connection established.")
-            return connection
-        except Exception as e:
-            print(f"Error connecting to the database: {e}")
-            raise
-
-    def fetch_all(self, query, params=None):
-        with self.connection.cursor() as cursor:
-            cursor.execute(query, params or [])
-            return cursor.fetchall()
+        self.connection = psycopg2.connect(
+            dbname="notification",
+            user="admin",
+            password="admin",
+            host="db",
+            port="5432"
+        )
+        self.connection.autocommit = True
 
     def execute(self, query, params=None):
+        """Wykonuje zapytanie bez zwracania wyników."""
         with self.connection.cursor() as cursor:
-            cursor.execute(query, params or [])
-            self.connection.commit()
+            cursor.execute(query, params)
 
-    def close(self):
-        if self.connection:
-            self.connection.close()
-            print("Database connection closed.")
+    def fetch_all(self, query, params=None):
+        """Wykonuje zapytanie i zwraca wszystkie wyniki."""
+        with self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def execute_and_fetchone(self, query, params=None):
+        """Wykonuje zapytanie i zwraca jeden wynik."""
+        with self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, params)
+            return dict(cursor.fetchone()) if cursor.rowcount > 0 else None
