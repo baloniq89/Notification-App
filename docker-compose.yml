@@ -1,0 +1,41 @@
+services:
+  scheduler_service:
+    build:
+      context: .  # Ustaw kontekst na katalog główny
+      dockerfile: ./scheduler_service/Dockerfile
+    ports:
+      - "5004:5000"
+
+  user_service:
+    build:
+      context: .
+      dockerfile: ./user_service/Dockerfile
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+
+  email_service:
+    build:
+      context: .  # Ustaw kontekst na katalog główny
+      dockerfile: ./email_service/Dockerfile
+    ports:
+      - "5002:5000"
+
+  push_service:
+    build:
+      context: .  # Ustaw kontekst na katalog główny
+      dockerfile: ./push_service/Dockerfile
+    ports:
+      - "5003:5000"
+
+
+  db:
+    image: postgres:latest
+    container_name: notification_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: notification
+    ports:
+      - "5432:5432"
